@@ -109,6 +109,10 @@ function setupScrollAnimations() {
 function animateNumber(element) {
     const finalValue = element.textContent;
     const numericValue = parseInt(finalValue.replace(/\D/g, ''));
+    
+    // SAFETY CHECK ADDED: If value is not a number (like "-"), stop animation
+    if (isNaN(numericValue)) return;
+
     const suffix = finalValue.replace(/\d/g, '');
     const duration = 2000;
     const start = Date.now();
