@@ -8,40 +8,63 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
-    <header class="header">
-        <div class="brand-logo">DOXYNCURE</div>
-        <a href="login.html" class="power-btn" title="Logout">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
-        </a>
-    </header>
 
-    <main class="workspace-container">
-        <textarea id="clinical-editor" placeholder="Start typing patient records..."></textarea>
-        <button class="btn-preview" onclick="openPreview()">Preview Document</button>
-    </main>
+<header class="header">
+    <div class="brand-logo">DOXYNCURE</div>
+    <a href="login.html" class="power-btn" title="Logout">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+            <line x1="12" y1="2" x2="12" y2="12"></line>
+        </svg>
+    </a>
+</header>
 
-    <div id="preview-modal" class="modal">
-        <div class="modal-content">
-            <div id="pdf-export-area" class="pdf-page">
-                <div class="pdf-header">
-                    <h1 id="hospital-name-display"></h1>
-                    <p class="doc-type">OFFICIAL MEDICAL RECORD</p>
-                </div>
-                
-                <div id="pdf-text-content" class="pdf-body"></div>
-                
-                <div class="pdf-footer">
-                    Powered by DOXYNCURE
-                </div>
+<main class="workspace-container">
+    <textarea id="clinical-editor" placeholder="Start typing patient records..."></textarea>
+    <button class="btn-preview" onclick="openPreview()">Preview Document</button>
+</main>
+
+<!-- EXISTING PREVIEW MODAL (UNCHANGED) -->
+<div id="preview-modal" class="modal">
+    <div class="modal-content">
+        <div id="pdf-export-area" class="pdf-page">
+            <div class="pdf-header">
+                <h1 id="hospital-name-display"></h1>
+                <p class="doc-type">OFFICIAL MEDICAL RECORD</p>
             </div>
 
-            <div class="modal-actions">
-                <button class="btn-edit" onclick="closePreview()">Edit Notes</button>
-                <button class="btn-download" onclick="downloadDocument()">Authorize & Download</button>
+            <div id="pdf-text-content" class="pdf-body"></div>
+
+            <div class="pdf-footer">
+                Powered by DOXYNCURE
             </div>
         </div>
-    </div>
 
-    <script src="input.js"></script>
+        <div class="modal-actions">
+            <button class="btn-edit" onclick="closePreview()">Edit Notes</button>
+            <button class="btn-download" onclick="startApproval()">Authorize & Send</button>
+        </div>
+    </div>
+</div>
+
+<!-- 🔒 NEW: APPROVAL WAIT MODAL (ISOLATED) -->
+<div id="approval-modal" class="modal">
+    <div class="modal-content" style="text-align:center;">
+        <h2 style="color:#0f172a;">Waiting for App Approval</h2>
+        <p style="color:#475569;margin-top:10px;">
+            A secure request has been sent to the Doxyncure mobile app.
+        </p>
+
+        <div style="margin:30px 0;font-size:32px;font-weight:800;color:#10b981;">
+            <span id="timer">05:00</span>
+        </div>
+
+        <p style="color:#64748b;font-size:13px;">
+            This request will expire automatically.
+        </p>
+    </div>
+</div>
+
+<script src="input.js"></script>
 </body>
 </html>
