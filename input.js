@@ -11,6 +11,7 @@ let documentId = null;
 
 function openPreview() {
     const editorContent = document.getElementById('clinical-editor').value;
+
     if (!editorContent.trim()) {
         alert("The workspace is empty.");
         return;
@@ -20,6 +21,7 @@ function openPreview() {
         hospital + " HOSPITAL";
 
     document.getElementById('pdf-text-content').innerText = editorContent;
+
     document.getElementById('preview-modal').style.display = 'flex';
 }
 
@@ -38,7 +40,7 @@ async function startApproval() {
     document.getElementById('approval-modal').style.display = 'flex';
 
     try {
-        // Generate PDF as blob (do NOT download here)
+        // Generate PDF as Blob (do NOT download here)
         const pdfBlob = await html2pdf()
             .from(element)
             .outputPdf("blob");
@@ -52,10 +54,20 @@ async function startApproval() {
             body: formData
         });
 
-        const data = await response.json();
+        if (!response.ok) {
+            throw new Error("Upload failed with status " + response.status);
+        }
+
+        const text = await response.text();
+        const data = text ? JSON.parse(text) : {};
+
+        if (!data.id) {
+            throw new Error("No document ID returned from server");
+        }
+
         documentId = data.id;
 
-        // Start timer
+        // Start countdown timer
         timeLeft = 300;
         approvalTimer = setInterval(updateTimer, 1000);
 
@@ -63,36 +75,43 @@ async function startApproval() {
         pollingInterval = setInterval(checkStatus, 5000);
 
     } catch (err) {
-        alert("Failed to upload PDF.");
-        console.error(err);
+        alert("Failed to send document.");
+        console.error("Upload Error:", err);
+        clearAll();
     }
 }
 
 // ========================
-// Poll Status
+// Poll Approval Status
 // ========================
 
 async function checkStatus() {
     if (!documentId) return;
 
     try {
-        const response = await fetch(`https://api.doxyncure.com/pending/${hospital}`);
+        const response = await fetch(
+            `https://api.doxyncure.com/pending/${hospital}`
+        );
+
         const data = await response.json();
 
-        // If no longer pending, check if approved
-        if (data && data.id === documentId) {
-            return; // still pending
-        }
+        // If document no longer pending → check if approved
+        if (!data || data.id !== documentId) {
 
-        const statusResponse = await fetch(`https://api.doxyncure.com/file/${documentId}`);
+            // Try to access file (if approved, it will exist)
+            const fileCheck = await fetch(
+                `https://api.doxyncure.com/file/${documentId}`,
+                { method: "HEAD" }
+            );
 
-        if (statusResponse.status === 200) {
-            clearAll();
-            alert("Document Approved ✅");
+            if (fileCheck.status === 200) {
+                clearAll();
+                alert("Document Approved ✅");
+            }
         }
 
     } catch (err) {
-        console.error(err);
+        console.error("Polling error:", err);
     }
 }
 
@@ -105,7 +124,7 @@ function updateTimer() {
     const seconds = timeLeft % 60;
 
     document.getElementById('timer').innerText =
-        `${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
+        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
     if (timeLeft <= 0) {
         clearAll();
@@ -129,7 +148,12 @@ function clearAll() {
 async function deleteFromServer() {
     if (!documentId) return;
 
-    await fetch(`https://api.doxyncure.com/deny/${documentId}`, {
-        method: "POST"
-    });
+    try {
+        await fetch(
+            `https://api.doxyncure.com/deny/${documentId}`,
+            { method: "POST" }
+        );
+    } catch (err) {
+        console.error("Delete failed:", err);
+    }
 }
